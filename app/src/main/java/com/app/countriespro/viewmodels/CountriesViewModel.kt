@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.app.countriespro.models.CountriesModel
 import com.app.countriespro.repositories.CountriesRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,21 +24,23 @@ class CountriesViewModel @Inject constructor(
     val countriesState : StateFlow<UiStates> get() = _countriesState
 
 
-    fun getCountries(){
-        viewModelScope.launch {
-            _countriesState.value = UiStates.LOADING
+    fun getCountries() {
+        CoroutineScope(Dispatchers.Main).launch {
             try {
-                countriesRepo.fetchData().collectLatest {
-                    _countriesState.value = UiStates.SUCCESS(it)
+                // Notify loading state on the main thread
+                _countriesState.value = UiStates.LOADING
+
+                // Fetch data in IO thread and update success state
+                val countries = withContext(Dispatchers.IO) {
+                    countriesRepo.fetchData()
                 }
-            } catch (ex : Exception){
-                _countriesState.value = UiStates.ERROR(ex.message!!)
+                _countriesState.value = UiStates.SUCCESS(countries)
+            } catch (ex: Exception) {
+                // Handle error state on the main thread
+                _countriesState.value = UiStates.ERROR(ex.message ?: "Unknown error")
             }
         }
     }
-
-
-
 
 
 

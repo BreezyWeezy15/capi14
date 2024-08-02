@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.lifecycle.livedata.ktx)
     implementation (libs.androidx.activity.ktx)
     implementation (libs.androidx.lifecycle.viewmodel.ktx)
     implementation (libs.logging.interceptor)
@@ -59,4 +60,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // testing
+
+    testImplementation (libs.kotlinx.coroutines.test)
+    testImplementation (libs.mockito.core)
+    testImplementation (libs.mockito.inline)
+    testImplementation (libs.androidx.core.testing)
 }
