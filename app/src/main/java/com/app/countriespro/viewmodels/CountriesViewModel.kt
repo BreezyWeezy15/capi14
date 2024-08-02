@@ -16,17 +16,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CountriesViewModel @Inject constructor(
-    private var countriesRepo: CountriesRepo
+    private val countriesRepo: CountriesRepo
 ) : ViewModel() {
 
-
-    private val _countriesState: MutableStateFlow<UiStates> = MutableStateFlow(UiStates.INITIAL)
+    private val _countriesState = MutableStateFlow<UiStates>(UiStates.INITIAL)
     val countriesState: StateFlow<UiStates> get() = _countriesState
 
+    private var dataFetched = false
+
+    init {
+        // Fetch data only if not already fetched
+        if (!dataFetched) {
+            fetchRemoteJson()
+        }
+    }
 
     fun fetchRemoteJson() {
-        _countriesState.value = UiStates.INITIAL
-        CoroutineScope(Dispatchers.Main).launch {
+        // Only fetch if not already fetched
+        if (dataFetched) return
+
+        _countriesState.value = UiStates.LOADING
+        viewModelScope.launch {
             try {
                 // Switch to IO dispatcher for network request
                 val response = withContext(Dispatchers.IO) {
@@ -42,18 +52,16 @@ class CountriesViewModel @Inject constructor(
     }
 
     private fun handleResponse(data: CountriesModel) {
+        dataFetched = true
         _countriesState.value = UiStates.SUCCESS(data)
-
     }
 
     private fun handleError(e: Exception) {
-        _countriesState.value = UiStates.ERROR(e.message!!)
+        _countriesState.value = UiStates.ERROR(e.message ?: "Unknown error")
     }
 
     sealed class UiStates {
-
         data object LOADING : UiStates()
-
         data class SUCCESS(val data: CountriesModel) : UiStates()
         data class ERROR(val error: String) : UiStates()
         data object INITIAL : UiStates()

@@ -1,6 +1,7 @@
 package com.app.countriespro
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -43,17 +44,7 @@ class MainActivity : AppCompatActivity() {
         adapter = CountriesAdapter(CountriesModel())
         binding.rv.adapter = adapter
 
-        // Restore the UI state if it was saved
-        savedInstanceState?.let {
-            val errorText = it.getString("errorText")
-            val showProgressBar = it.getBoolean("showProgressBar")
-            binding.progressBar.visibility = if (showProgressBar) View.VISIBLE else View.GONE
-            binding.errorTxt.text = errorText
-            binding.errorTxt.visibility = if (errorText != null) View.VISIBLE else View.GONE
-        }
-
-        // Fetch data
-        countriesViewModel.fetchRemoteJson()
+        // Observe ViewModel state
         lifecycleScope.launch {
             countriesViewModel.countriesState.collectLatest { state ->
                 when (state) {
@@ -77,8 +68,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        // Save UI state
-        outState.putBoolean("showProgressBar", binding.progressBar.visibility == View.VISIBLE)
-        outState.putString("errorText", binding.errorTxt.text.toString())
+        // Save specific UI states if necessary
+        binding.rv.layoutManager?.onSaveInstanceState()?.let {
+            outState.putParcelable("recyclerViewState", it)
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        // Restore specific UI states if necessary
+        savedInstanceState.getParcelable<Parcelable>("recyclerViewState")?.let {
+            binding.rv.layoutManager?.onRestoreInstanceState(it)
+        }
     }
 }
