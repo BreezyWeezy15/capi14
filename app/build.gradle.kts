@@ -62,7 +62,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     // testing
-
+    testImplementation ("org.assertj:assertj-core:3.24.2")
     testImplementation (libs.kotlinx.coroutines.test)
     testImplementation (libs.mockito.core)
     testImplementation (libs.mockito.inline)

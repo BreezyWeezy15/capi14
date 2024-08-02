@@ -21,48 +21,64 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding : ActivityMainBinding
-    private  val countriesViewModel: CountriesViewModel by viewModels()
+    private lateinit var binding: ActivityMainBinding
+    private val countriesViewModel: CountriesViewModel by viewModels()
     private lateinit var adapter: CountriesAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-
-
+        // Initialize the RecyclerView
         binding.rv.layoutManager = LinearLayoutManager(this)
-
-        // Initialize the adapter with an empty list
         adapter = CountriesAdapter(CountriesModel())
         binding.rv.adapter = adapter
 
+        // Restore the UI state if it was saved
+        savedInstanceState?.let {
+            val errorText = it.getString("errorText")
+            val showProgressBar = it.getBoolean("showProgressBar")
+            binding.progressBar.visibility = if (showProgressBar) View.VISIBLE else View.GONE
+            binding.errorTxt.text = errorText
+            binding.errorTxt.visibility = if (errorText != null) View.VISIBLE else View.GONE
+        }
+
+        // Fetch data
         countriesViewModel.fetchRemoteJson()
         lifecycleScope.launch {
-            countriesViewModel.countriesState.collectLatest {
-                when(it){
+            countriesViewModel.countriesState.collectLatest { state ->
+                when (state) {
                     is CountriesViewModel.UiStates.LOADING -> {
                         binding.progressBar.visibility = View.VISIBLE
                     }
                     is CountriesViewModel.UiStates.SUCCESS -> {
                         binding.progressBar.visibility = View.GONE
-                        adapter.updateCountries(it.data)
+                        adapter.updateCountries(state.data)
                     }
                     is CountriesViewModel.UiStates.ERROR -> {
-                        binding.progressBar.visibility = View.VISIBLE
-                        binding.errorTxt.visibility = View.GONE
-                        binding.errorTxt.text = it.error
+                        binding.progressBar.visibility = View.GONE
+                        binding.errorTxt.visibility = View.VISIBLE
+                        binding.errorTxt.text = state.error
                     }
                     else -> {}
                 }
             }
         }
+    }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save UI state
+        outState.putBoolean("showProgressBar", binding.progressBar.visibility == View.VISIBLE)
+        outState.putString("errorText", binding.errorTxt.text.toString())
     }
 }
