@@ -5,19 +5,30 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.asLiveData
 import com.app.countriespro.models.CountriesModel
+import com.app.countriespro.repositories.CountriesRepo
 import com.app.countriespro.repositories.CountriesRepoImpl
 import com.app.countriespro.viewmodels.CountriesViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -61,17 +72,16 @@ class MyViewModelTest {
 
     @Test
     fun `getCountries should post success state when data is fetched successfully`() = runBlockingTest {
-            val countriesModel = CountriesModel() // replace with actual data
-            `when`(countriesRepo.fetchData()).thenReturn(countriesModel)
+        val countriesModel = CountriesModel() // replace with actual data
+        `when`(countriesRepo.fetchData()).thenReturn(countriesModel)
 
-            viewModel.getCountries()
+        viewModel.getCountries()
 
-            advanceUntilIdle() // Ensure all coroutines have completed
+        advanceUntilIdle() // Ensure all coroutines have completed
 
-            val inOrder = Mockito.inOrder(uiStatesObserver)
-            inOrder.verify(uiStatesObserver).onChanged(UiStates.LOADING)
-            inOrder.verify(uiStatesObserver).onChanged(UiStates.SUCCESS(countriesModel))
-        }
+        val inOrder = Mockito.inOrder(uiStatesObserver)
+        inOrder.verify(uiStatesObserver).onChanged(UiStates.LOADING)
+        inOrder.verify(uiStatesObserver).onChanged(UiStates.SUCCESS(countriesModel))
+    }
 
 }
-

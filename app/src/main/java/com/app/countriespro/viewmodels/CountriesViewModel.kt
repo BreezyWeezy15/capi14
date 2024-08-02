@@ -17,38 +17,45 @@ import javax.inject.Inject
 @HiltViewModel
 class CountriesViewModel @Inject constructor(
     private var countriesRepo: CountriesRepo
-) : ViewModel(){
+) : ViewModel() {
 
 
-    private val _countriesState : MutableStateFlow<UiStates> = MutableStateFlow(UiStates.INITIAL)
-    val countriesState : StateFlow<UiStates> get() = _countriesState
+    private val _countriesState: MutableStateFlow<UiStates> = MutableStateFlow(UiStates.INITIAL)
+    val countriesState: StateFlow<UiStates> get() = _countriesState
 
 
-    fun getCountries() {
+    fun fetchRemoteJson() {
+        _countriesState.value = UiStates.INITIAL
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // Notify loading state on the main thread
-                _countriesState.value = UiStates.LOADING
-
-                // Fetch data in IO thread and update success state
-                val countries = withContext(Dispatchers.IO) {
+                // Switch to IO dispatcher for network request
+                val response = withContext(Dispatchers.IO) {
                     countriesRepo.fetchData()
                 }
-                _countriesState.value = UiStates.SUCCESS(countries)
-            } catch (ex: Exception) {
-                // Handle error state on the main thread
-                _countriesState.value = UiStates.ERROR(ex.message ?: "Unknown error")
+                // Handle the response on the main thread
+                handleResponse(response)
+            } catch (e: Exception) {
+                // Handle any errors
+                handleError(e)
             }
         }
     }
 
+    private fun handleResponse(data: CountriesModel) {
+        _countriesState.value = UiStates.SUCCESS(data)
 
+    }
 
+    private fun handleError(e: Exception) {
+        _countriesState.value = UiStates.ERROR(e.message!!)
+    }
 
     sealed class UiStates {
+
         data object LOADING : UiStates()
-        data class SUCCESS(var countriesModel: CountriesModel) : UiStates()
-        data class ERROR(var error : String) : UiStates()
+
+        data class SUCCESS(val data: CountriesModel) : UiStates()
+        data class ERROR(val error: String) : UiStates()
         data object INITIAL : UiStates()
     }
 }

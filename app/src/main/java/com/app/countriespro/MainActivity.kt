@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         adapter = CountriesAdapter(CountriesModel())
         binding.rv.adapter = adapter
 
-        countriesViewModel.getCountries()
+        countriesViewModel.fetchRemoteJson()
         lifecycleScope.launch {
             countriesViewModel.countriesState.collectLatest {
                 when(it){
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     is CountriesViewModel.UiStates.SUCCESS -> {
                         binding.progressBar.visibility = View.GONE
-                        adapter.updateCountries(it.countriesModel)
+                        adapter.updateCountries(it.data)
                     }
                     is CountriesViewModel.UiStates.ERROR -> {
                         binding.progressBar.visibility = View.VISIBLE
