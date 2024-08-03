@@ -7,12 +7,17 @@ import com.app.countriespro.models.Language
 import com.app.countriespro.repositories.CountriesRepo
 import com.app.countriespro.services.AuthService
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.contains
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.Matchers.containsInAnyOrder
 
 class CountriesRepoTest {
 
@@ -28,7 +33,7 @@ class CountriesRepoTest {
     @Test
     fun `fetchData should return CountriesModel from authService`(): Unit = runBlocking {
         // Given
-        val expectedCountries = CountriesModel().apply {
+        val values = CountriesModel().apply {
             add(
                 CountriesModelItem(
                     capital = "Kabul",
@@ -55,13 +60,13 @@ class CountriesRepoTest {
                 )
             )
         }
-        `when`(authService.fetchCountries()).thenReturn(expectedCountries)
+        `when`(authService.fetchCountries()).thenReturn(values)
 
         // When
         val result = countriesRepo.fetchData()
 
-        // Then
-        assertEquals(expectedCountries, result)
+        assertThat(result, containsInAnyOrder(*values.toTypedArray()))
+        assertEquals(values, result)
         verify(authService).fetchCountries()  // Ensure fetchCountries was called
     }
 }
