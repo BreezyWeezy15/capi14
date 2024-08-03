@@ -25,16 +25,10 @@ class CountriesViewModel @Inject constructor(
     private var dataFetched = false
 
     init {
-        // Fetch data only if not already fetched
-        if (!dataFetched) {
-            fetchRemoteJson()
-        }
+        fetchRemoteJson()
     }
 
-    fun fetchRemoteJson() {
-        // Only fetch if not already fetched
-        if (dataFetched) return
-
+    private fun fetchRemoteJson() {
         _countriesState.value = UiStates.LOADING
         viewModelScope.launch {
             try {
