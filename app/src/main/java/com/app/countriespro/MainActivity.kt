@@ -66,19 +66,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        // Save specific UI states if necessary
-        binding.rv.layoutManager?.onSaveInstanceState()?.let {
-            outState.putParcelable("recyclerViewState", it)
-        }
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        // Restore specific UI states if necessary
-        savedInstanceState.getParcelable<Parcelable>("recyclerViewState")?.let {
-            binding.rv.layoutManager?.onRestoreInstanceState(it)
-        }
-    }
+    
 }
